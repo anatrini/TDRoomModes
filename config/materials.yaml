@@ -1,0 +1,184 @@
+# Material Absorption Coefficients Database
+# Format: absorption coefficients at octave band center frequencies
+# Frequencies: [125, 250, 500, 1000, 2000, 4000] Hz
+
+materials:
+  # Wall materials
+  concrete_smooth:
+    name: "Smooth Concrete"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.01, 0.01, 0.02, 0.02, 0.02, 0.03]
+    description: "Unpainted smooth concrete or cement"
+
+  concrete_rough:
+    name: "Rough Concrete"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.02, 0.03, 0.03, 0.03, 0.04, 0.07]
+    description: "Rough, unpainted concrete"
+
+  concrete_painted:
+    name: "Painted Concrete"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.10, 0.05, 0.06, 0.07, 0.09, 0.08]
+    description: "Smooth concrete with paint"
+
+  brick_unglazed:
+    name: "Unglazed Brick"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.03, 0.03, 0.03, 0.04, 0.05, 0.07]
+    description: "Unglazed painted brick"
+
+  brick_glazed:
+    name: "Glazed Brick"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.01, 0.01, 0.01, 0.01, 0.02, 0.02]
+    description: "Glazed brick, tile, or marble"
+
+  plaster_gypsum:
+    name: "Gypsum Plaster"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.013, 0.015, 0.02, 0.03, 0.04, 0.05]
+    description: "Smooth gypsum plaster on brick or concrete"
+
+  plaster_lime_rough:
+    name: "Rough Lime Plaster"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.02, 0.03, 0.04, 0.05, 0.04, 0.03]
+    description: "Rough lime plaster"
+
+  # Wood materials
+  wood_panel_thin:
+    name: "Thin Wood Panel"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.42, 0.21, 0.10, 0.08, 0.06, 0.06]
+    description: "Thin plywood panel with air space behind"
+
+  wood_floor:
+    name: "Wood Floor"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.15, 0.11, 0.10, 0.07, 0.06, 0.07]
+    description: "Wood floor on joists or battens"
+
+  wood_stage_floor:
+    name: "Stage Floor"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.10, 0.07, 0.06, 0.06, 0.06, 0.06]
+    description: "Wood stage floor, solid on concrete"
+
+  # Glass and windows
+  glass_window_ordinary:
+    name: "Ordinary Glass Window"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.35, 0.25, 0.18, 0.12, 0.07, 0.04]
+    description: "Ordinary window glass, 3mm thick"
+
+  glass_window_heavy:
+    name: "Heavy Glass Window"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.18, 0.06, 0.04, 0.03, 0.02, 0.02]
+    description: "Heavy plate glass, 6-10mm thick"
+
+  # Acoustic treatments
+  acoustic_plaster:
+    name: "Acoustic Plaster"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.03, 0.15, 0.40, 0.60, 0.70, 0.70]
+    description: "Spray-applied acoustic plaster, 12mm thick"
+
+  mineral_wool_50mm:
+    name: "Mineral Wool 50mm"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.10, 0.30, 0.70, 0.90, 0.95, 0.95]
+    description: "50mm mineral wool on rigid backing"
+
+  mineral_wool_100mm:
+    name: "Mineral Wool 100mm"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.30, 0.70, 0.95, 0.98, 0.99, 0.99]
+    description: "100mm mineral wool on rigid backing"
+
+  foam_acoustic_25mm:
+    name: "Acoustic Foam 25mm"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.08, 0.25, 0.60, 0.90, 0.95, 0.90]
+    description: "25mm open-cell acoustic foam"
+
+  curtains_light:
+    name: "Light Curtains"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.03, 0.04, 0.11, 0.17, 0.24, 0.35]
+    description: "Light curtains, 10cm from wall"
+
+  curtains_heavy:
+    name: "Heavy Curtains"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.14, 0.35, 0.55, 0.72, 0.70, 0.65]
+    description: "Heavy curtains draped to half area"
+
+  # Ceiling materials
+  ceiling_acoustic_tile:
+    name: "Acoustic Ceiling Tile"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.20, 0.40, 0.70, 0.80, 0.85, 0.85]
+    description: "Suspended acoustic ceiling tiles"
+
+  ceiling_plasterboard:
+    name: "Plasterboard Ceiling"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.29, 0.10, 0.05, 0.04, 0.07, 0.09]
+    description: "Plasterboard ceiling on frame with air space"
+
+  # Floor materials
+  carpet_thin:
+    name: "Thin Carpet"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.02, 0.06, 0.14, 0.37, 0.60, 0.65]
+    description: "Thin carpet on concrete"
+
+  carpet_thick:
+    name: "Thick Carpet"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.08, 0.24, 0.57, 0.69, 0.71, 0.73]
+    description: "Heavy carpet with underlay"
+
+  linoleum:
+    name: "Linoleum"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.02, 0.03, 0.03, 0.03, 0.03, 0.02]
+    description: "Linoleum or PVC on concrete"
+
+  # People (for occupancy modeling)
+  audience_seated:
+    name: "Seated Audience"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.60, 0.74, 0.88, 0.96, 0.93, 0.85]
+    description: "Audience seated in upholstered seats (per person, ~0.5 m²)"
+    unit: "per person"
+
+  audience_standing:
+    name: "Standing Audience"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.25, 0.40, 0.55, 0.65, 0.70, 0.70]
+    description: "Standing people (per person, ~0.5 m²)"
+    unit: "per person"
+
+  # Air absorption (per meter)
+  air_20C_50RH:
+    name: "Air Absorption (20°C, 50% RH)"
+    frequencies: [125, 250, 500, 1000, 2000, 4000]
+    absorption: [0.0002, 0.0006, 0.0015, 0.0032, 0.0091, 0.0290]
+    description: "Atmospheric absorption at 20°C, 50% relative humidity"
+    unit: "per meter"
+
+# Default material assignments for common surfaces
+defaults:
+  walls: concrete_smooth
+  floor: concrete_smooth
+  ceiling: plasterboard_ceiling
+  windows: glass_window_ordinary
+
+# Notes on usage:
+# - Values are empirical and depend on installation details
+# - Interpolation recommended for frequencies between listed values
+# - Use appropriate material for your specific case
+# - References: ISO 354, Kuttruff "Room Acoustics", various manufacturers
