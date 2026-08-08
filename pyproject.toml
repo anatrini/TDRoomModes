@@ -1,0 +1,8 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = "-ra --strict-markers"
+markers = [
+  "integration: invokes FEniCSx or the AcousticFEM CLI",
+  "known_defect: executable specification for a confirmed current defect",
+]
