@@ -1,0 +1,22 @@
+name: acoustics-phase0
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.15
+  - fenics-dolfinx=0.11.0
+  - mpich=5.0.1
+  - numpy=2.4.6
+  - scipy=1.17.1
+  - pandas=3.0.5
+  - trimesh=5.0.0
+  - meshio=5.3.5
+  - pyvista=0.48.4
+  - plotly=6.9.0
+  - matplotlib=3.11.1
+  - pyyaml=6.0.3
+  - tqdm=4.70.0
+  - h5py=3.16.0
+  - pytest=8.4.2
+  - pip
+  - pip:
+      - pymeshlab==2025.7.post1
