@@ -84,9 +84,14 @@ class Chan:
 
 
 class ScriptOp:
-    def __init__(self, **pars):
+    def __init__(self, siblings=(), **pars):
         self.par = SimpleNamespace(**{k: Par(k, v, self) for k, v in pars.items()})
         self.channels, self.storage, self.image = {}, {}, None
+        self.siblings = list(siblings)
+
+    def parent(self):
+        siblings = self.siblings
+        return SimpleNamespace(findChildren=lambda type, depth: [s for s in siblings if isinstance(s, type)])
 
     def clear(self):
         self.channels = {}
@@ -105,7 +110,7 @@ class ScriptOp:
         self.image = array
 
     def __getitem__(self, name):
-        return self.channels[name]
+        return self.channels.get(name)  # TouchDesigner returns None for a missing channel
 
 
 def callbacks(name, seconds, project_folder=REPO):
@@ -114,6 +119,7 @@ def callbacks(name, seconds, project_folder=REPO):
     spec.loader.exec_module(module)
     module.absTime = SimpleNamespace(seconds=seconds)
     module.project = SimpleNamespace(folder=str(project_folder))
+    module.scriptCHOP = ScriptOp
     return module
 
 
@@ -164,3 +170,20 @@ def test_callbacks_end_to_end(grid_file):
     points = ScriptOp(Repository=str(REPO), Grid=str(grid_file), Weights=chop, Gain=1.0)
     callbacks("points_top", 10.05).onCook(points)
     assert points.image.shape[2] == 4
+
+
+def test_tops_find_the_modes_chop_when_the_parameter_is_empty(grid_file):
+    chop = ScriptOp(Repository=str(REPO), Grid=str(grid_file), Excitation="mode", Sourcex=0.0,
+                    Sourcey=0.0, Sourcez=0.0, Frequency=50.0, Mode=1, Loop=0.0, Speed=1.0,
+                    callbacks=callbacks_dat(str(REPO / "touchdesigner" / "modes_chop.py")))
+    callbacks("modes_chop", 0.0).onCook(chop)
+    other = ScriptOp(callbacks=callbacks_dat("somewhere/else.py"))
+
+    top = ScriptOp(siblings=[other, chop], Repository=str(REPO), Grid=str(grid_file), Weights=None,
+                   Axis="z", Position=0.5, Colors="signed", Gain=1.0)
+    callbacks("slice_top", 0.0).onCook(top)
+    assert top.image is not None
+
+    lonely = ScriptOp(siblings=[other], Repository=str(REPO), Grid=str(grid_file), Weights=None, Gain=1.0)
+    with pytest.raises(RuntimeError, match="Modes CHOP"):
+        callbacks("points_top", 0.0).onCook(lonely)

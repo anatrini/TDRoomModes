@@ -1,6 +1,6 @@
 """Script TOP callbacks: the sound field on a plane through the room.
 
-Reads the weights from the modes Script CHOP. Set Common > Pixel Format to 32-bit float (RGBA).
+Reads the weights from the modes Script CHOP. The image is 32-bit float RGBA.
 See README.md in this folder.
 """
 
@@ -49,9 +49,24 @@ def onSetupParameters(scriptOp):
     gain.default = 1.0
 
 
+def modes_chop(scriptOp):
+    """The modes Script CHOP: the "Modes CHOP" parameter or, if empty, the Script CHOP next to
+    this operator whose callbacks are synced to modes_chop.py."""
+    chop = scriptOp.par.Weights.eval()
+    if chop is None:
+        for candidate in scriptOp.parent().findChildren(type=scriptCHOP, depth=1):
+            callbacks = candidate.par.callbacks.eval()
+            if callbacks is not None and str(callbacks.par.file.eval()).endswith("modes_chop.py"):
+                chop = candidate
+                break
+    if chop is None or chop["weight"] is None:
+        raise RuntimeError("Set 'Modes CHOP' to the Script CHOP that runs modes_chop.py")
+    return chop
+
+
 def onCook(scriptOp):
     rt, room = load(scriptOp)
     par = scriptOp.par
-    weights = np.array(par.Weights.eval()["weight"].vals)
+    weights = np.array(modes_chop(scriptOp)["weight"].vals)
     field = room.slice(weights, par.Axis.eval(), par.Position.eval())
     scriptOp.copyNumpyArray(rt.to_rgba(field, par.Colors.eval(), par.Gain.eval()))

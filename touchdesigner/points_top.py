@@ -1,7 +1,7 @@
 """Script TOP callbacks: points inside the room with their pressure, for instancing.
 
-One pixel per point: RGB = x, y, z [m], A = pressure. Set Common > Pixel Format to 32-bit float
-(RGBA). See README.md in this folder.
+One pixel per point: RGB = x, y, z [m], A = pressure, as 32-bit floats. See README.md in this
+folder.
 """
 
 import sys
@@ -42,8 +42,23 @@ def onSetupParameters(scriptOp):
     gain.default = 1.0
 
 
+def modes_chop(scriptOp):
+    """The modes Script CHOP: the "Modes CHOP" parameter or, if empty, the Script CHOP next to
+    this operator whose callbacks are synced to modes_chop.py."""
+    chop = scriptOp.par.Weights.eval()
+    if chop is None:
+        for candidate in scriptOp.parent().findChildren(type=scriptCHOP, depth=1):
+            callbacks = candidate.par.callbacks.eval()
+            if callbacks is not None and str(callbacks.par.file.eval()).endswith("modes_chop.py"):
+                chop = candidate
+                break
+    if chop is None or chop["weight"] is None:
+        raise RuntimeError("Set 'Modes CHOP' to the Script CHOP that runs modes_chop.py")
+    return chop
+
+
 def onCook(scriptOp):
     rt, room = load(scriptOp)
     par = scriptOp.par
-    weights = np.array(par.Weights.eval()["weight"].vals)
+    weights = np.array(modes_chop(scriptOp)["weight"].vals)
     scriptOp.copyNumpyArray(rt.points_image(room, weights, par.Gain.eval()))

@@ -71,9 +71,10 @@ should cook every frame; if it stands still, force it from an Execute DAT:
 
 1. Add a **Script TOP**; sync its callbacks DAT to `touchdesigner/slice_top.py` as above and
    pulse **Setup Parameters**.
-2. Set **Modes CHOP** to the Script CHOP, and **grid.npz** to the same file as the CHOP (or
-   leave both empty).
-3. Common page: **Pixel Format** 32-bit float (RGBA), so negative values survive.
+2. **Modes CHOP**: leave it empty to use the Script CHOP of section 2 in the same network, or
+   choose it. **grid.npz**: the same file as the CHOP, or empty for both.
+3. The image is 32-bit float RGBA, so negative values survive: the format comes from the data,
+   which is why Pixel Format on the Common page is greyed out.
 4. **Plane normal** and **Plane position** choose the plane; **Colors** gives red for positive
    and blue for negative pressure, or the raw value in RGB for your own processing. Alpha is 0
    outside the room.
@@ -83,9 +84,9 @@ build, add a Flip TOP.
 
 ## 4. A point cloud
 
-1. Add a **Script TOP** with `touchdesigner/points_top.py`, as above: Modes CHOP, the same
-   grid.npz, Pixel Format 32-bit float (RGBA). Each pixel is one point inside the room:
-   RGB = x, y, z in metres, A = pressure.
+1. Add a **Script TOP** with `touchdesigner/points_top.py`, as above, with the same grid.npz.
+   Each pixel is one point inside the room, as 32-bit floats: RGB = x, y, z in metres,
+   A = pressure.
 2. Add a **Geometry COMP** with a small Sphere or Box SOP inside, plus a Camera COMP, a Light COMP
    and a Render TOP.
 3. On the Geometry COMP, Instance page: turn on **Instancing**, set **Instance OP** to the
