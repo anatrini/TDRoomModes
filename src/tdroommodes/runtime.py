@@ -174,7 +174,7 @@ def auto_scale(field: np.ndarray) -> np.ndarray:
     return field / peak if peak > SILENCE else field
 
 
-SILENCE = 1e-4  # relative to the loudest point of the room
+SILENCE = 1e-2  # -40 dB relative to the loudest point of the room: FEM residue on nodal planes is below it
 
 
 def points_image(room: RoomModes, weights, gain: float = 1.0, auto: bool = False) -> np.ndarray:

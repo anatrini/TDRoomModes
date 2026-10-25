@@ -189,8 +189,11 @@ def test_tops_find_the_modes_chop_when_the_parameter_is_empty(grid_file):
         callbacks("points_top", 0.0).onCook(lonely)
 
 
-def test_auto_scale_shows_the_field_after_the_room_has_faded(grid_file):
+def test_auto_scale(grid_file):
     room = runtime.load(grid_file)
-    late = room.slice(room.weights("impulse", 1.5, [1.0, 0.8, 0.7]))
-    assert np.nanmax(np.abs(late)) < 0.05  # physically almost silent
-    assert np.nanmax(np.abs(runtime.auto_scale(late))) == pytest.approx(1.0)
+    source = [1.0, 0.8, 0.7]
+    faded = room.slice(room.weights("impulse", 0.2, source))
+    assert 0.01 < np.nanmax(np.abs(faded)) < 0.5  # quieter than at the start, still audible
+    assert np.nanmax(np.abs(runtime.auto_scale(faded))) == pytest.approx(1.0)
+    silent = room.slice(room.weights("impulse", 1.5, source))
+    assert np.nanmax(np.abs(runtime.auto_scale(silent))) < runtime.SILENCE  # not blown up
