@@ -1,348 +1,223 @@
-# AcousticFEM v2 - Room Acoustics Analysis
+# AcousticFEM
 
-**Modern Python implementation for acoustic modal analysis using FEniCSx.**
+Acoustic modes of rooms with the finite element method, for analysis and for artistic use.
 
-Calculates room modes, reverberation time (T60), and generates interactive 3D visualizations.
+A room resonates at its modes: standing waves at particular frequencies, each with its own
+pattern of loud and silent regions and its own decay time. Below the Schroeder frequency the
+modes are few and far apart, and they shape what a room does to low sounds. AcousticFEM
+computes them for rooms of any shape, from a 3D model or a scan, and exports them so that the
+sound field can be animated and played with, for example in TouchDesigner.
 
-✅ Works natively on Apple Silicon (M1/M2/M3) and all platforms
-✅ Scientifically validated (< 0.5% error vs analytical solutions)
-✅ Fast (3-5 minutes for typical room)
-✅ Handles real-world 3D scans with holes/imperfections
+What it computes:
 
----
+- every mode from 0 Hz up to the Schroeder frequency (or a frequency you choose), on the real
+  geometry of the room;
+- the decay of each mode, from the materials of floor, walls and ceiling and from the air;
+- reverberation time (Sabine, Eyring) per octave band, Schroeder frequency, critical distance;
+- the response between a source and a receiver, and its modal impulse response as a WAV file.
 
 ## Installation
 
-```bash
-# Clone and navigate
-cd /Users/anatrini/Documents/GitHub/SoundWaveModeling/AcousticFEM_v2
-
-# Create environment from file
-conda env create -f environment.yml
-
-# Activate
-conda activate acoustics
-
-# Verify
-python -c "from dolfinx import mesh; print('✓ Ready!')"
-```
-
-**That's it!** Total time: ~10 minutes
-
----
-
-## Quick Start
-
-### Using the CLI Tool (Recommended)
+AcousticFEM needs [uv](https://docs.astral.sh/uv/) and runs on macOS, Windows and Linux.
 
 ```bash
-# Analyze your 3D mesh file
-python acoustic_analysis.py your_room.stl
-
-# With automatic mesh repair
-python acoustic_analysis.py your_room.obj --repair
-
-# Custom analysis parameters
-python acoustic_analysis.py concert_hall.ply --repair --modes 50 --freq-range 20 150 --absorption 0.2
-
-# View results (opens in browser)
-open your_room_results/frequency_spectrum.html
-open your_room_results/mode_gallery.html
+git clone https://github.com/anatrini/AcousticFEM.git
+cd AcousticFEM
+uv sync
 ```
 
-### Using the Example Script
+`uv sync` creates the environment in `.venv` with Python 3.11 or later and every dependency,
+all from prebuilt packages: nothing to compile. Check it with `uv run pytest`.
+
+## Quick start
 
 ```bash
-# Run example analysis (rectangular room)
-python examples/complete_analysis_modern.py
+# A scan or a 3D model: closed surface, in metres
+uv run acousticfem data/datini_25k.stl
 
-# View results
-open acoustic_results/frequency_spectrum.html
-open acoustic_results/mode_gallery.html
+# A rectangular room, 8 x 6 x 3.5 m, absorption 0.1 everywhere, modes up to 150 Hz
+uv run acousticfem --box 8 6 3.5 --absorption 0.1 --fmax 150
+
+# Materials per surface, model in millimetres with y up, grid export for TouchDesigner
+uv run acousticfem hall.obj --scale 0.001 --up y \
+    --material floor=wood_floor --material walls=plaster_gypsum --material ceiling=0.05 \
+    --grid 0.25
+
+uv run acousticfem --list-materials
+uv run acousticfem --help
 ```
 
----
+Results go to `results/<name>/`:
 
-## CLI Tool Usage
+| File | Content |
+|---|---|
+| `summary.json` | volume, surfaces, reverberation times, Schroeder frequency, mesh, timings |
+| `modes.csv` | one row per mode: frequency, T60, decay, damping ratio, bandwidth, value at source and receiver |
+| `modes.npz` | frequencies, decay, mesh and mode shapes (numpy) |
+| `spectrum.html` | the modes and the response at the receiver |
+| `gallery.html` | mode shapes on a plane through the room |
+| `impulse_response.wav` | modal part of the impulse response from source to receiver |
+| `grid.npz` | with `--grid SPACING`: mode shapes on a regular grid |
+| `modes.vtu` | with `--paraview`: mesh and mode shapes for ParaView |
 
-The `acoustic_analysis.py` script provides a complete command-line interface:
+Source and receiver default to two asymmetric points inside the room; set them with
+`--source X Y Z` and `--receiver X Y Z`.
 
-### Basic Usage
+## Notebooks
+
 ```bash
-python acoustic_analysis.py INPUT_MESH [OPTIONS]
+uv run jupyter lab notebooks/
 ```
 
-### Common Options
+1. `01_rectangular_room.ipynb`: a rectangular room checked against the exact solution;
+   materials, decay, response and listening.
+2. `02_real_room_to_touchdesigner.ipynb`: the scan of Palazzo Datini, from the surface to the
+   animated field and the export for TouchDesigner.
 
-**Mesh Processing:**
-- `--repair` - Automatically fix holes and mesh issues
-- `--resolution N` - Mesh resolution (default: 15, higher = more accurate)
-
-**Analysis Parameters:**
-- `--modes N` - Number of modes to compute (default: 30)
-- `--freq-range MIN MAX` - Frequency range in Hz (default: 20 150)
-- `--absorption ALPHA` - Absorption coefficient 0-1 (default: 0.15)
-- `--source-position X Y Z` - Sound source location in meters
-
-**Output:**
-- `--output DIR` - Output directory (default: `{input_name}_results`)
-- `--no-visualizations` - Skip HTML generation (faster)
-
-### Examples
-
-**Basic analysis:**
-```bash
-python acoustic_analysis.py room.stl
-```
-
-**High-quality analysis with repair:**
-```bash
-python acoustic_analysis.py concert_hall.obj --repair --resolution 25 --modes 50
-```
-
-**Quick preview:**
-```bash
-python acoustic_analysis.py space.stl --modes 15 --resolution 10 --no-visualizations
-```
-
-**Custom absorption and source:**
-```bash
-python acoustic_analysis.py studio.ply --repair --absorption 0.3 --source-position 5 3 1.5
-```
-
-**Get all options:**
-```bash
-python acoustic_analysis.py --help
-```
-
----
-
-## Python API Usage
+## Python
 
 ```python
-from mesh.converter import create_box_mesh
-from analysis.modes import AcousticAnalyzer
-from visualization.interactive import ModeVisualizer
+import acousticfem as af
 
-# Create room mesh
-domain = create_box_mesh(
-    length=8.0, width=6.0, height=3.5,  # meters
-    nx=15, ny=12, nz=8                    # resolution
+result = af.analyze(
+    "data/datini_25k.stl",
+    absorption={"floor": "wood_floor", "walls": "plaster_lime_rough", "ceiling": 0.1},
 )
-
-# Analyze acoustics
-analyzer = AcousticAnalyzer(domain, speed_of_sound=343.0)
-modes = analyzer.compute_modes(num_modes=30, freq_range=(20, 150))
-analyzer.calculate_t60(alpha_avg=0.15)  # absorption coefficient
-analyzer.save_results("acoustic_results")
-
-# Visualize
-visualizer = ModeVisualizer(modes, domain)
-fig = visualizer.plot_frequency_spectrum()
-fig.write_html("acoustic_results/spectrum.html")
+print(result.statistics["schroeder_frequency_hz"], len(result.modes))
+print(result.modes.frequencies, result.modes.t60)
+result.write("results/datini", grid_spacing=0.5)
 ```
 
----
+For a rectangular room pass its dimensions, `af.analyze((8, 6, 3.5), ...)`; its surfaces are
+`x0, x1, y0, y1, floor, ceiling`. Absorption is a number for every surface, or a dict that gives
+each surface a material name, a number, or six octave-band coefficients (125 Hz to 4 kHz).
 
-## Using Your Own 3D Model
+The steps are also available one by one: `af.load_surface`, `af.from_surface` or `af.box`,
+`af.compute`, `Modes.set_absorption`, `Modes.evaluate`, `af.room_statistics`.
 
-For photogrammetry scans or CAD models:
+## TouchDesigner and real-time use
 
-```python
-from mesh.importer import MeshImporter
-from mesh.converter import trimesh_to_fenicsx
+Below the Schroeder frequency the pressure in the room is a sum of modes,
 
-# Import and auto-repair (handles holes!)
-importer = MeshImporter("path/to/your/model.stl")
-trimesh_obj = importer.import_and_repair(
-    fix_holes=True,
-    remove_duplicates=True,
-    max_frequency=150.0
-)
+$$p(\mathbf{x}, t) = \sum_n a_n\, \varphi_n(\mathbf{x})\, e^{-\delta_n t} \cos(\omega_n t + \theta_n).$$
 
-# Convert to FEniCSx
-domain = trimesh_to_fenicsx(trimesh_obj)
+The shapes φₙ are the expensive part and are computed once. Frequency, decay, source position
+and excitation only change the weights, so each frame is one weighted sum of precomputed
+shapes: cheap enough for real time, on the CPU with numpy or on the GPU in a shader.
 
-# Run analysis (same as above)
-analyzer = AcousticAnalyzer(domain)
-modes = analyzer.compute_modes(num_modes=30)
-```
+- `grid.npz`: `shapes` (x × y × z × modes, zero outside the room), `inside`, the axes `x`,
+  `y`, `z`, `frequencies`, `decay`. A 3D texture per mode, or a slice of it.
+- `modes.npz`: `vertices`, `tetrahedra`, `vertex_shapes` (vertices × modes): a point cloud.
+- `src/acousticfem/synth.py`: free decay, sine source, impulse response, transfer function.
+  It imports only numpy: copy the file next to your TouchDesigner project and import it there.
+  (Importing the whole `acousticfem` package needs its other dependencies.)
 
----
+Notebook 2 shows a Script TOP that draws a slice of the field.
 
-## Customization
+## Method
 
-### Room Dimensions
-Edit `examples/complete_analysis_modern.py`:
+**Modes.** The Helmholtz eigenvalue problem with rigid walls,
+−∇²φ = k²φ in the room and ∂φ/∂n = 0 on the walls, f = ck/2π, is discretized with quadratic
+Lagrange elements on tetrahedra ([scikit-fem](https://github.com/kinnala/scikit-fem)) and
+solved with shift-invert Lanczos (SciPy, ARPACK). The solver asks for all modes above 0 Hz and
+repeats with more if the highest one found is still below f_max, so no mode in the range is
+skipped. Shapes are normalized to ∫φ² dV = 1.
 
-```python
-LENGTH, WIDTH, HEIGHT = 10.0, 7.0, 4.0  # Your dimensions [m]
-```
+**Mesh.** The element size is a quarter of the shortest wavelength (c / f_max / 4), which keeps
+the frequency error below 1% (tests). The volume mesh comes from
+[gmsh](https://gmsh.info) when the surface is clean, and from
+[fTetWild](https://github.com/wildmeshing/fTetWild) when gmsh rejects it: scans often
+intersect themselves, and fTetWild keeps the boundary within 0.2% of the room size from the
+original. Separate parts below 0.1% of the room volume are scan debris and are dropped.
 
-### Mesh Resolution (speed vs accuracy)
-```python
-NX, NY, NZ = 10, 8, 6   # FAST (1-2 min)
-NX, NY, NZ = 15, 12, 8  # GOOD (3-5 min) ← Default
-NX, NY, NZ = 25, 20, 12 # HIGH (10-15 min)
-```
+**Decay.** Wall absorption enters as a first-order perturbation of the rigid-wall modes
+(Kuttruff, *Room Acoustics*, ch. 3): a wall of real normalized admittance β adds
+(c/2) ∫ β φₙ² dS to the amplitude decay constant δₙ, and air adds c·m/2, with m the
+energy attenuation of ISO 9613-1. β comes from the random-incidence absorption coefficient
+by inverting the Paris formula (β ≈ α/8 for small α). For a diffuse field this reproduces the
+Sabine formula exactly; for single modes it gives each mode its own decay. T60ₙ = 3 ln 10 / δₙ.
+Absorption coefficients come from octave-band tables: below 125 Hz, where most modes are, the
+125 Hz value is used.
 
-### Frequency Range
-```python
-F_MIN, F_MAX = 50, 100  # Hz
-NUM_MODES = 30
-```
+**Limits.**
 
-### Materials
-```python
-ALPHA_AVG = 0.05   # Hard (concrete, tile)
-ALPHA_AVG = 0.15   # Medium (typical room) ← Default
-ALPHA_AVG = 0.40   # Soft (curtains, carpet)
-```
+- Modes describe the room below the Schroeder frequency. Above it they overlap: the sum is
+  still usable as material for sound and image, but no longer a faithful model of the room.
+- The perturbation is accurate for absorption up to about 0.3–0.4 at the modal frequencies;
+  above that, decay times are approximate (a warning says so).
+- Walls are locally reacting with real impedance; the source is a point.
+- The `up` axis decides which surfaces are floor and ceiling (outward normal within about 45°
+  of vertical). Check the areas in `summary.json`: a model rotated by mistake shows almost
+  only walls.
+- Geometry details much smaller than the wavelength do not affect the modes; a scan can be
+  coarse. Thin gaps in a scan, however, can create spurious cavities, which show up as
+  Helmholtz resonances (very low modes concentrated in a small region).
 
----
+## Validation
 
-## Output Files
+`uv run pytest` runs 30 tests, among them:
 
-After running analysis, you'll find:
-
-```
-{input_name}_results/
-├── frequency_spectrum.html  # Interactive frequency plot
-│                           # Shows all modes as bars
-│                           # X-axis: Frequency [Hz]
-│                           # Y-axis: Modal amplitude
-│
-├── mode_gallery.html        # 2D pressure distribution
-│                           # Shows sound pressure patterns
-│                           # Red = high pressure, Blue = low pressure
-│                           # X/Y axes show room dimensions [m]
-│
-├── modes_summary.csv        # Mode data (open in Excel)
-│                           # Columns: Mode, Frequency, T60, Damping, Amplitude
-│
-├── mode_data.json          # Complete data in JSON format
-│                           # Includes room metrics (Schroeder freq, etc.)
-│
-└── mode_*.xdmf             # 3D mode shapes for ParaView
-                            # Professional visualization
-```
-
-### Understanding the Visualizations
-
-**Frequency Spectrum:**
-- Each vertical bar = one room mode (resonance)
-- Taller bars = modes more strongly excited by source
-- Hover to see mode number, frequency, T60, damping
-
-**Mode Gallery:**
-- Shows 2D slice through room (default: horizontal at mid-height)
-- Color = sound pressure amplitude at that location
-- Red areas = antinodes (maximum pressure variation)
-- Blue areas = nodes (minimum pressure variation)
-- X/Y axes = room dimensions in meters
-
----
-
-## Troubleshooting
-
-### "ModuleNotFoundError: No module named 'dolfinx'"
-```bash
-conda activate acoustics
-```
-
-### "Mesh is not watertight"
-```python
-mesh = importer.import_and_repair(fix_holes=True)
-```
-
-### "Out of memory"
-```python
-NX, NY, NZ = 10, 8, 6  # Reduce resolution
-```
-
-### "Takes too long"
-```python
-NUM_MODES = 15  # Reduce number of modes
-```
-
-### Installation fails
-Try installing packages separately:
-```bash
-conda install -c conda-forge fenics-dolfinx -y
-conda install -c conda-forge mpich pyvista -y
-pip install pymeshlab
-```
-
----
-
-## Physics
-
-**Helmholtz eigenvalue problem:**
-```
--∇²p = λp   where λ = (2πf/c)²
-```
-Rigid boundary conditions: ∂p/∂n = 0
-
-**T60 reverberation time:**
-- Sabine: `T60 = 0.161 V / (α A)` (low absorption)
-- Eyring: `T60 = 0.161 V / [-A ln(1-α)]` (high absorption)
-
-**Validated against:**
-- ISO 3382-1:2009 (Room acoustics)
-- ISO 9613-1:1993 (Air absorption)
-- Analytical solutions for rectangular rooms
-
----
-
-## Project Structure
-
-```
-AcousticFEM_v2/
-├── README.md                # This file
-├── environment.yml          # Conda environment
-│
-├── src/
-│   ├── mesh/
-│   │   ├── importer.py     # Import/repair 3D meshes
-│   │   └── converter.py    # Convert to FEniCSx
-│   ├── physics/
-│   │   ├── helmholtz_modern.py  # FEM eigenvalue solver
-│   │   └── decay.py             # T60 calculations
-│   ├── analysis/
-│   │   └── modes.py             # High-level analyzer
-│   └── visualization/
-│       └── interactive.py       # Plotly visualizations
-│
-├── examples/
-│   └── complete_analysis_modern.py  # Main example
-│
-└── config/
-    └── materials.yaml      # Material database (30+ materials)
-```
-
----
+- frequencies of a rectangular room against the exact solution, error below 1% with linear
+  and quadratic elements (0.45% for the 8 × 6 × 3.5 m room up to 150 Hz);
+- mode shapes at given points against the exact cosine;
+- decay of the oblique mode (1,1,1) against the Sabine formula;
+- air attenuation against the table of ISO 9613-1 (20 °C, 50%, 125 Hz–4 kHz);
+- volume and surfaces of an L-shaped room with both meshers;
+- the command line end to end.
 
 ## Performance
 
-| Mesh Resolution | Time | Use Case |
-|----------------|------|----------|
-| 10×8×6 | 1-2 min | Quick testing |
-| 15×12×8 | 3-5 min | Standard analysis ⭐ |
-| 25×20×12 | 10-15 min | Publication quality |
+On an Apple M-series laptop, total time of one run:
 
-**Rule of thumb:** For max frequency f_max [Hz], use ~f_max/10 elements per meter
+| | AcousticFEM 2 (FEniCSx) | AcousticFEM 3 |
+|---|---|---|
+| 8 × 6 × 3.5 m room, 20–150 Hz | 80 s, 30 of 89 modes, error up to 9% | 5 s, 88 of 89 modes, error below 0.5% |
+| Datini scan, absorption 0.1, up to the Schroeder frequency (68 Hz) | the bounding box instead of the room | 47 s, 128 modes on the real geometry (20 s of it for the mesh) |
 
----
+## Changes from version 2
+
+Version 2 had errors that made its results unreliable; version 3 is a rewrite.
+
+- STL files were replaced by their bounding box: every room was computed as a rectangular room.
+- The solver returned the N modes closest to the middle of the frequency range, missing the
+  lowest ones.
+- Mode shapes were evaluated in the wrong element, so amplitudes and plots were wrong.
+- Air absorption (ISO 9613-1) was off by a factor of about 58 000; the damping ratio by a
+  factor π; the critical distance by a factor 2.5.
+- Every mode got the same, statistical, T60; now each mode has its own decay.
+- `--repair` and `--resolution` did not work, and `materials.yaml` was not used.
+- FEniCSx and conda are replaced by scikit-fem, gmsh, fTetWild and uv, which install
+  everywhere, including Windows.
+
+## Structure
+
+```
+src/acousticfem/
+    geometry.py     surfaces, volume meshes (gmsh, fTetWild), floor/walls/ceiling
+    modes.py        eigenmodes, decay from absorption, evaluation at points
+    physics.py      Sabine, Eyring, ISO 9613-1, Schroeder, critical distance
+    materials.py    absorption of the surfaces; materials.yaml, 25 materials
+    statistics.py   reverberation time per octave band
+    synth.py        sound fields from the modes, numpy only
+    export.py       grid, ParaView, CSV
+    plots.py        spectrum and mode gallery (Plotly)
+    analysis.py     the whole pipeline
+    cli.py          the acousticfem command
+notebooks/          examples
+tests/              validation
+data/               scans of Palazzo Datini
+```
 
 ## References
 
-1. ISO 3382-1:2009. Acoustics — Measurement of room acoustic parameters
-2. Kuttruff, H. (2016). *Room Acoustics* (6th ed.). CRC Press
-3. Thompson, L. L. (2006). "A review of finite-element methods for time-harmonic acoustics." *JASA* 119(3)
-4. FEniCSx documentation: https://docs.fenicsproject.org/
-
----
+1. H. Kuttruff, *Room Acoustics*, 6th ed., CRC Press, 2016.
+2. ISO 9613-1:1993, Acoustics — Attenuation of sound during propagation outdoors, part 1.
+3. M. R. Schroeder, K. H. Kuttruff, "On frequency response curves in rooms", *JASA* 34, 1962.
+4. T. Gustafsson, G. D. McBain, "scikit-fem: a Python package for finite element assembly",
+   *Journal of Open Source Software* 5(52), 2020.
+5. C. Geuzaine, J.-F. Remacle, "Gmsh: a 3-D finite element mesh generator", *IJNME* 79, 2009.
+6. Y. Hu et al., "Fast tetrahedral meshing in the wild", *ACM Transactions on Graphics* 39(4), 2020.
 
 ## License
 
-MIT License
+MIT, see [LICENSE](LICENSE).
