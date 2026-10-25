@@ -4,6 +4,8 @@ One pixel per point: RGB = x, y, z [m], A = pressure, as 32-bit floats. See READ
 folder.
 """
 
+import importlib
+import os
 import sys
 from pathlib import Path
 
@@ -28,7 +30,16 @@ def load(scriptOp):
     src = str(repository / "src")
     if src not in sys.path:
         sys.path.insert(0, src)
-    from tdroommodes import runtime as rt
+    from tdroommodes import runtime, synth
+
+    # TouchDesigner keeps imported modules in memory: reload them when their files have changed
+    # (or when it is unknown), so an update of TDRoomModes reaches a project that is already open
+    for module in (synth, runtime):
+        stamp = os.path.getmtime(module.__file__)
+        if getattr(module, "_file_stamp", None) != stamp:
+            module = importlib.reload(module)
+            module._file_stamp = stamp
+    rt = sys.modules["tdroommodes.runtime"]
     grid = absolute(par.Grid.eval()) if par.Grid.eval() else repository / "examples" / "box" / "grid.npz"
     return rt, rt.load(grid)
 

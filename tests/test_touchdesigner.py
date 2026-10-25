@@ -197,3 +197,29 @@ def test_auto_scale(grid_file):
     assert np.nanmax(np.abs(runtime.auto_scale(faded))) == pytest.approx(1.0)
     silent = room.slice(room.weights("impulse", 1.5, source))
     assert np.nanmax(np.abs(runtime.auto_scale(silent))) < runtime.SILENCE  # not blown up
+
+
+def test_callbacks_reload_a_stale_runtime(grid_file):
+    """TouchDesigner keeps modules in memory: a runtime imported before an update (here, one
+    without auto_scale) must be replaced, not used. Runs in a fresh interpreter."""
+    code = f"""
+import sys, importlib.util
+from types import SimpleNamespace
+sys.path.insert(0, {str(REPO / 'src')!r})
+sys.path.insert(0, {str(REPO / 'tests')!r})
+import tdroommodes.runtime as old
+del old.auto_scale                      # the version TouchDesigner had in memory
+from test_touchdesigner import ScriptOp, callbacks, callbacks_dat
+chop = ScriptOp(Repository='', Grid={str(grid_file)!r}, Excitation='mode', Sourcex=0.0, Sourcey=0.0,
+                Sourcez=0.0, Frequency=50.0, Mode=0, Loop=0.0, Speed=1.0,
+                callbacks=callbacks_dat({str(REPO / 'touchdesigner' / 'modes_chop.py')!r}))
+callbacks('modes_chop', 0.0).onCook(chop)
+top = ScriptOp(Repository='', Grid={str(grid_file)!r}, Weights=chop, Axis='z', Position=0.5,
+               Colors='signed', Gain=1.0,
+               callbacks=callbacks_dat({str(REPO / 'touchdesigner' / 'slice_top.py')!r}))
+callbacks('slice_top', 0.0).onCook(top)
+print('ok', top.image.shape)
+"""
+    out = subprocess.run([sys.executable, "-c", code], cwd=REPO, capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    assert out.stdout.startswith("ok")
