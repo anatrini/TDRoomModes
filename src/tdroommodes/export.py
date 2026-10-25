@@ -8,14 +8,15 @@ from .modes import Modes
 
 
 def sample_grid(modes: Modes, spacing: float) -> dict:
-    """Mode shapes on a regular grid covering the room.
+    """Mode shapes on a regular grid covering the room from wall to wall; the spacing is
+    adjusted per axis so that the grid ends exactly on the bounds.
 
     Returns:
         dict with axes "x", "y", "z", "shapes" (nx, ny, nz, n_modes; 0 outside the room),
         "inside" (nx, ny, nz bool), "frequencies" and "decay"
     """
     lo, hi = modes.room.bounds
-    axes = [np.arange(a, b + spacing / 2, spacing) for a, b in zip(lo, hi)]
+    axes = [np.linspace(a, b, max(2, int(round((b - a) / spacing)) + 1)) for a, b in zip(lo, hi)]
     X, Y, Z = np.meshgrid(*axes, indexing="ij")
     values = modes.evaluate(np.column_stack([X.ravel(), Y.ravel(), Z.ravel()]))
     inside = ~np.isnan(values[:, 0])
