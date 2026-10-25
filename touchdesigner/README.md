@@ -53,6 +53,8 @@ Parameters:
   source* (a steady sine at **Sine frequency**: the modes near it respond most), *Single mode*
   (mode **Mode index** on its own, without decay).
 - **Source**: position in metres, in the coordinates of the model.
+- **Speed**: time scale. Modes oscillate at tens of hertz, faster than the frame rate; 0.02
+  slows them down fifty times, so you can watch each one breathe.
 
 The weights keep the field within [-1, 1]. The callback reads `absTime.seconds`, so the CHOP
 should cook every frame; if it stands still, force it from an Execute DAT:
