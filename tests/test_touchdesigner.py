@@ -108,12 +108,39 @@ class ScriptOp:
         return self.channels[name]
 
 
-def callbacks(name, seconds):
+def callbacks(name, seconds, project_folder=REPO):
     spec = importlib.util.spec_from_file_location(name, REPO / "touchdesigner" / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     module.absTime = SimpleNamespace(seconds=seconds)
+    module.project = SimpleNamespace(folder=str(project_folder))
     return module
+
+
+def callbacks_dat(file):
+    """The callbacks Text DAT, synced to `file`."""
+    return SimpleNamespace(par=SimpleNamespace(file=Par("file", file)))
+
+
+def test_callbacks_find_the_repository_and_the_example(tmp_path):
+    """With every parameter empty: the folder comes from the synced callbacks file, the
+    modes from examples/box/grid.npz."""
+    chop = ScriptOp(Repository="", Grid="", Excitation="mode", Sourcex=0.0, Sourcey=0.0, Sourcez=0.0,
+                    Frequency=50.0, Mode=0, Loop=0.0, Speed=1.0,
+                    callbacks=callbacks_dat(str(REPO / "touchdesigner" / "modes_chop.py")))
+    callbacks("modes_chop", 0.0, project_folder=tmp_path).onCook(chop)
+    assert chop["frequency"].vals[0] == pytest.approx(343.2 / 16, rel=1e-3)  # 8 m axial mode
+
+    # A path relative to the project folder, as TouchDesigner stores it
+    relative = ScriptOp(Repository="", Grid="", Excitation="mode", Sourcex=0.0, Sourcey=0.0,
+                        Sourcez=0.0, Frequency=50.0, Mode=0, Loop=0.0, Speed=1.0,
+                        callbacks=callbacks_dat("TDRoomModes/touchdesigner/modes_chop.py"))
+    callbacks("modes_chop", 0.0, project_folder=REPO.parent).onCook(relative)
+    assert relative["frequency"].vals == chop["frequency"].vals
+
+    unsynced = ScriptOp(Repository="", Grid="", callbacks=callbacks_dat(""))
+    with pytest.raises(RuntimeError, match="callbacks DAT"):
+        callbacks("modes_chop", 0.0).onCook(unsynced)
 
 
 def test_callbacks_end_to_end(grid_file):

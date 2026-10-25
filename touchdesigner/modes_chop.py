@@ -8,18 +8,38 @@ import sys
 from pathlib import Path
 
 
-def runtime(scriptOp):
-    src = str(Path(scriptOp.par.Repository.eval()).expanduser() / "src")
+def load(scriptOp):
+    """tdroommodes.runtime and the modes of this operator's grid.npz.
+
+    The TDRoomModes folder is the "TDRoomModes folder" parameter if set, otherwise found from
+    the file this callbacks DAT is synced to (TDRoomModes/touchdesigner/<file>.py). An empty
+    grid.npz loads the example in TDRoomModes/examples/box.
+    """
+    def absolute(path):
+        path = Path(path).expanduser()
+        return path if path.is_absolute() else Path(project.folder) / path
+
+    par = scriptOp.par
+    if par.Repository.eval():
+        repository = absolute(par.Repository.eval())
+    else:
+        synced = par.callbacks.eval().par.file.eval()
+        if not synced:
+            raise RuntimeError("Set File of the callbacks DAT to TDRoomModes/touchdesigner/"
+                               "<callbacks>.py, or fill in 'TDRoomModes folder'")
+        repository = absolute(synced).resolve().parents[1]
+    src = str(repository / "src")
     if src not in sys.path:
         sys.path.insert(0, src)
     from tdroommodes import runtime as rt
-    return rt
+    grid = absolute(par.Grid.eval()) if par.Grid.eval() else repository / "examples" / "box" / "grid.npz"
+    return rt, rt.load(grid)
 
 
 def onSetupParameters(scriptOp):
     page = scriptOp.appendCustomPage("Room Modes")
-    page.appendFolder("Repository", label="TDRoomModes folder")
-    page.appendFile("Grid", label="grid.npz")
+    page.appendFile("Grid", label="grid.npz (empty: example room)")
+    page.appendFolder("Repository", label="TDRoomModes folder (optional)")
     excitation = page.appendMenu("Excitation")[0]
     excitation.menuNames = ["impulse", "sine", "mode"]
     excitation.menuLabels = ["Impulse at the source", "Sine at the source", "Single mode"]
@@ -41,8 +61,7 @@ def onPulse(par):
 
 
 def onCook(scriptOp):
-    rt = runtime(scriptOp)
-    room = rt.load(scriptOp.par.Grid.eval())
+    _, room = load(scriptOp)
     par = scriptOp.par
     excitation = par.Excitation.eval()
     t = absTime.seconds

@@ -16,6 +16,11 @@ TouchDesigner build with Python 3.11 or later (2023 builds and newer).
 These callbacks are tested outside TouchDesigner, against stand-ins for its objects. If a
 step below does not behave as described in your build, please open an issue.
 
+You need the TDRoomModes folder on the computer that runs TouchDesigner (clone it or download
+the ZIP from GitHub). uv is needed only where you compute new rooms: to try things out,
+`examples/box/grid.npz` already holds the modes of an 8 × 6 × 3.5 m room, and the operators
+load it when their grid.npz parameter is empty.
+
 ## 1. Compute the modes
 
 In a terminal, in the TDRoomModes folder:
@@ -42,9 +47,11 @@ job = runtime.compute("/path/to/TDRoomModes", "/path/to/room.stl", "/path/to/res
 
 1. Add a **Script CHOP**. TouchDesigner creates a callbacks Text DAT next to it.
 2. On that Text DAT, set **File** to `touchdesigner/modes_chop.py` in this folder and turn on
-   **Sync to File**, so that the DAT follows the file.
+   **Sync to File**, so that the DAT follows the file. From that path the callbacks find the
+   rest of TDRoomModes by themselves.
 3. On the Script CHOP, Script page, pulse **Setup Parameters**. A **Room Modes** page appears.
-4. Set **TDRoomModes folder** to the repository folder and **grid.npz** to the computed file.
+4. **grid.npz**: leave it empty for the example room, or choose a computed file.
+   **TDRoomModes folder** is needed only if the callbacks DAT is not synced to a file.
 
 Parameters:
 
@@ -62,9 +69,10 @@ should cook every frame; if it stands still, force it from an Execute DAT:
 
 ## 3. A slice of the field
 
-1. Add a **Script TOP**; set its callbacks DAT to `touchdesigner/slice_top.py` as above, pulse
-   **Setup Parameters**, fill in the folder and grid.npz.
-2. Set **Modes CHOP** to the Script CHOP.
+1. Add a **Script TOP**; sync its callbacks DAT to `touchdesigner/slice_top.py` as above and
+   pulse **Setup Parameters**.
+2. Set **Modes CHOP** to the Script CHOP, and **grid.npz** to the same file as the CHOP (or
+   leave both empty).
 3. Common page: **Pixel Format** 32-bit float (RGBA), so negative values survive.
 4. **Plane normal** and **Plane position** choose the plane; **Colors** gives red for positive
    and blue for negative pressure, or the raw value in RGB for your own processing. Alpha is 0
@@ -75,8 +83,9 @@ build, add a Flip TOP.
 
 ## 4. A point cloud
 
-1. Add a **Script TOP** with `touchdesigner/points_top.py`, as above, Pixel Format 32-bit float
-   (RGBA). Each pixel is one point inside the room: RGB = x, y, z in metres, A = pressure.
+1. Add a **Script TOP** with `touchdesigner/points_top.py`, as above: Modes CHOP, the same
+   grid.npz, Pixel Format 32-bit float (RGBA). Each pixel is one point inside the room:
+   RGB = x, y, z in metres, A = pressure.
 2. Add a **Geometry COMP** with a small Sphere or Box SOP inside, plus a Camera COMP, a Light COMP
    and a Render TOP.
 3. On the Geometry COMP, Instance page: turn on **Instancing**, set **Instance OP** to the

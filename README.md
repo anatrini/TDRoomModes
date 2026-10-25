@@ -169,7 +169,7 @@ Absorption coefficients come from octave-band tables: below 125 Hz, where most m
 
 ## Validation
 
-`uv run pytest` runs 38 tests, among them:
+`uv run pytest` runs 39 tests, among them:
 
 - frequencies of a rectangular room against the exact solution, error below 1% with linear
   and quadratic elements (0.45% for the 8 × 6 × 3.5 m room up to 150 Hz);
@@ -200,6 +200,7 @@ src/tdroommodes/
 touchdesigner/      Script CHOP and TOP callbacks, setup guide
 notebooks/          examples
 tests/              validation
+examples/box/        modes of an 8 x 6 x 3.5 m room, ready for TouchDesigner
 data/               scans of Palazzo Datini
 ```
 
