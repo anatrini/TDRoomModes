@@ -71,7 +71,7 @@ uv run jupyter lab notebooks/
 
 1. `01_rectangular_room.ipynb`: a rectangular room checked against the exact solution;
    materials, decay, response and listening.
-2. `02_real_room_to_touchdesigner.ipynb`: the scan of Palazzo Datini, from the surface to the
+2. `02_real_room_to_TouchDesigner.ipynb`: the scan of Palazzo Datini, from the surface to the
    animated field and the export for TouchDesigner.
 
 ## Python
@@ -173,21 +173,6 @@ On an Apple M-series laptop, total time of one run:
 |---|---|---|
 | 8 × 6 × 3.5 m room, 20–150 Hz | 80 s, 30 of 89 modes, error up to 9% | 5 s, 88 of 89 modes, error below 0.5% |
 | Datini scan, absorption 0.1, up to the Schroeder frequency (68 Hz) | the bounding box instead of the room | 47 s, 128 modes on the real geometry (20 s of it for the mesh) |
-
-## Changes from version 2
-
-Version 2 had errors that made its results unreliable; version 3 is a rewrite.
-
-- STL files were replaced by their bounding box: every room was computed as a rectangular room.
-- The solver returned the N modes closest to the middle of the frequency range, missing the
-  lowest ones.
-- Mode shapes were evaluated in the wrong element, so amplitudes and plots were wrong.
-- Air absorption (ISO 9613-1) was off by a factor of about 58 000; the damping ratio by a
-  factor π; the critical distance by a factor 2.5.
-- Every mode got the same, statistical, T60; now each mode has its own decay.
-- `--repair` and `--resolution` did not work, and `materials.yaml` was not used.
-- FEniCSx and conda are replaced by scikit-fem, gmsh, fTetWild and uv, which install
-  everywhere, including Windows.
 
 ## Structure
 
