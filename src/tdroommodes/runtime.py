@@ -168,9 +168,13 @@ def auto_scale(field: np.ndarray) -> np.ndarray:
 
     The weights of `RoomModes.weights` keep the physical level: after an impulse the field fades
     as the room does, and around a source it peaks next to the source. Auto scale shows the
-    shape of the field whatever its level."""
+    shape of the field whatever its level. Below `SILENCE` (a field on a nodal plane, or long
+    after an impulse) it is left alone, so numerical noise is not blown up to full scale."""
     peak = np.nanmax(np.abs(field)) if np.any(~np.isnan(field)) else 0.0
-    return field / peak if peak > 0 else field
+    return field / peak if peak > SILENCE else field
+
+
+SILENCE = 1e-4  # relative to the loudest point of the room
 
 
 def points_image(room: RoomModes, weights, gain: float = 1.0, auto: bool = False) -> np.ndarray:
