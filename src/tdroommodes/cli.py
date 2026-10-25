@@ -1,4 +1,4 @@
-"""Command line: acousticfem ROOM.stl [options], or acousticfem --box L W H [options]."""
+"""Command line: tdroommodes ROOM.stl [options], or tdroommodes --box L W H [options]."""
 
 import argparse
 import logging
@@ -26,18 +26,18 @@ def _absorption(args):
 
 def parse_args(argv=None):
     p = argparse.ArgumentParser(
-        prog="acousticfem",
+        prog="tdroommodes",
         description="Acoustic modes of a room with the finite element method.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""examples:
-  acousticfem room.stl
-  acousticfem --box 8 6 3.5 --absorption 0.1
-  acousticfem scan.obj --up y --material floor=wood_floor --material walls=plaster_gypsum \\
+  tdroommodes room.stl
+  tdroommodes --box 8 6 3.5 --absorption 0.1
+  tdroommodes scan.obj --up y --material floor=wood_floor --material walls=plaster_gypsum \\
       --material ceiling=0.05 --grid 0.25
-  acousticfem --list-materials""")
+  tdroommodes --list-materials""")
     p.add_argument("geometry", nargs="?", help="closed surface of the room (STL, OBJ, PLY, ...)")
     p.add_argument("--box", nargs=3, type=float, metavar=("L", "W", "H"), help="rectangular room [m]")
-    p.add_argument("--version", action="version", version=f"acousticfem {__version__}")
+    p.add_argument("--version", action="version", version=f"tdroommodes {__version__}")
 
     g = p.add_argument_group("geometry")
     g.add_argument("--scale", type=float, default=1.0, help="factor to metres (0.001 for mm)")

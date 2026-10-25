@@ -1,8 +1,8 @@
 import pytest
 import trimesh
 
-import acousticfem as af
-from acousticfem import geometry
+import tdroommodes as trm
+from tdroommodes import geometry
 
 
 def l_shaped_room():
@@ -14,7 +14,7 @@ def l_shaped_room():
 
 
 def test_box_surfaces():
-    room = af.box(8, 6, 3.5, 1.0)
+    room = trm.box(8, 6, 3.5, 1.0)
     assert room.volume == pytest.approx(168)
     assert room.surface_area("floor") == pytest.approx(48)
     assert room.surface_area("x0") == pytest.approx(21)

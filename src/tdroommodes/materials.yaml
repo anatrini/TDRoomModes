@@ -169,8 +169,8 @@ defaults:
 
 # Notes on usage:
 # - Values are empirical and depend on installation details
-# - acousticfem interpolates linearly in log frequency between bands and uses the
+# - tdroommodes interpolates linearly in log frequency between bands and uses the
 #   125 Hz value below 125 Hz, where most room modes are
-# - Air absorption is not a material: acousticfem computes it after ISO 9613-1
+# - Air absorption is not a material: tdroommodes computes it after ISO 9613-1
 # - Use appropriate material for your specific case
 # - References: ISO 354, Kuttruff "Room Acoustics", various manufacturers

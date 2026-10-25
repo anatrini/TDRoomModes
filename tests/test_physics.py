@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from acousticfem import materials, physics
+from tdroommodes import materials, physics
 
 
 @pytest.mark.parametrize("frequency, db_per_km", [

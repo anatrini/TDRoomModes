@@ -1,28 +1,33 @@
-# AcousticFEM
+# TDRoomModes
 
-Acoustic modes of rooms with the finite element method, for analysis and for artistic use.
+The resonances of real rooms, computed with physical accuracy and played in TouchDesigner.
 
 A room resonates at its modes: standing waves at particular frequencies, each with its own
 pattern of loud and silent regions and its own decay time. Below the Schroeder frequency the
-modes are few and far apart, and they shape what a room does to low sounds. AcousticFEM
-computes them for rooms of any shape, from a 3D model or a scan, and exports them so that the
-sound field can be animated and played with, for example in TouchDesigner.
+modes are few and far apart, and they shape what a room does to low sounds. TDRoomModes
+computes them for rooms of any shape, from a 3D model or a scan, and brings them into
+TouchDesigner, where the sound field of the room can be excited, animated and drawn in real
+time: as slices, as point clouds, or as data for your own networks.
 
-What it computes:
+It works in two steps:
 
-- every mode from 0 Hz up to the Schroeder frequency (or a frequency you choose), on the real
-  geometry of the room;
-- the decay of each mode, from the materials of floor, walls and ceiling and from the air;
-- reverberation time (Sabine, Eyring) per octave band, Schroeder frequency, critical distance;
-- the response between a source and a receiver, and its modal impulse response as a WAV file.
+1. **Compute, once per room** (Python, `uv run tdroommodes room.stl --grid 0.25`): the finite
+   element method finds every mode up to the Schroeder frequency on the real geometry, and the
+   materials of floor, walls and ceiling give each mode its decay.
+2. **Play, in real time** (TouchDesigner, `touchdesigner/`): a Script CHOP sets the weight of
+   each mode for an impulse, a sine or a single mode at a source you can move; Script TOPs draw
+   the resulting field. Each frame is one weighted sum of precomputed shapes.
+
+The computation also gives reverberation times per octave band, the response between a source
+and a receiver, and the modal impulse response as a WAV file.
 
 ## Installation
 
-AcousticFEM needs [uv](https://docs.astral.sh/uv/) and runs on macOS, Windows and Linux.
+TDRoomModes needs [uv](https://docs.astral.sh/uv/) and runs on macOS, Windows and Linux.
 
 ```bash
-git clone https://github.com/anatrini/AcousticFEM.git
-cd AcousticFEM
+git clone https://github.com/anatrini/TDRoomModes.git
+cd TDRoomModes
 uv sync
 ```
 
@@ -33,18 +38,18 @@ all from prebuilt packages: nothing to compile. Check it with `uv run pytest`.
 
 ```bash
 # A scan or a 3D model: closed surface, in metres
-uv run acousticfem data/datini_25k.stl
+uv run tdroommodes data/datini_25k.stl
 
 # A rectangular room, 8 x 6 x 3.5 m, absorption 0.1 everywhere, modes up to 150 Hz
-uv run acousticfem --box 8 6 3.5 --absorption 0.1 --fmax 150
+uv run tdroommodes --box 8 6 3.5 --absorption 0.1 --fmax 150
 
 # Materials per surface, model in millimetres with y up, grid export for TouchDesigner
-uv run acousticfem hall.obj --scale 0.001 --up y \
+uv run tdroommodes hall.obj --scale 0.001 --up y \
     --material floor=wood_floor --material walls=plaster_gypsum --material ceiling=0.05 \
     --grid 0.25
 
-uv run acousticfem --list-materials
-uv run acousticfem --help
+uv run tdroommodes --list-materials
+uv run tdroommodes --help
 ```
 
 Results go to `results/<name>/`:
@@ -77,9 +82,9 @@ uv run jupyter lab notebooks/
 ## Python
 
 ```python
-import acousticfem as af
+import tdroommodes as trm
 
-result = af.analyze(
+result = trm.analyze(
     "data/datini_25k.stl",
     absorption={"floor": "wood_floor", "walls": "plaster_lime_rough", "ceiling": 0.1},
 )
@@ -88,31 +93,40 @@ print(result.modes.frequencies, result.modes.t60)
 result.write("results/datini", grid_spacing=0.5)
 ```
 
-For a rectangular room pass its dimensions, `af.analyze((8, 6, 3.5), ...)`; its surfaces are
+For a rectangular room pass its dimensions, `trm.analyze((8, 6, 3.5), ...)`; its surfaces are
 `x0, x1, y0, y1, floor, ceiling`. Absorption is a number for every surface, or a dict that gives
 each surface a material name, a number, or six octave-band coefficients (125 Hz to 4 kHz).
 
-The steps are also available one by one: `af.load_surface`, `af.from_surface` or `af.box`,
-`af.compute`, `Modes.set_absorption`, `Modes.evaluate`, `af.room_statistics`.
+The steps are also available one by one: `trm.load_surface`, `trm.from_surface` or `trm.box`,
+`trm.compute`, `Modes.set_absorption`, `Modes.evaluate`, `trm.room_statistics`.
 
-## TouchDesigner and real-time use
+## TouchDesigner
+
+[`touchdesigner/README.md`](touchdesigner/README.md) explains how to set up the three Script
+operators, step by step:
+
+| Operator | Output |
+|---|---|
+| Script CHOP, `modes_chop.py` | one sample per mode: `frequency`, `t60`, `weight`; excitation by impulse, sine or single mode, at a source you place |
+| Script TOP, `slice_top.py` | the field on a plane through the room |
+| Script TOP, `points_top.py` | the points inside the room, RGB = position, A = pressure, for instancing |
 
 Below the Schroeder frequency the pressure in the room is a sum of modes,
 
 $$p(\mathbf{x}, t) = \sum_n a_n\, \varphi_n(\mathbf{x})\, e^{-\delta_n t} \cos(\omega_n t + \theta_n).$$
 
-The shapes φₙ are the expensive part and are computed once. Frequency, decay, source position
-and excitation only change the weights, so each frame is one weighted sum of precomputed
-shapes: cheap enough for real time, on the CPU with numpy or on the GPU in a shader.
+The shapes φₙ are the expensive part and are computed once. Excitation, frequency, decay and
+source position only change the weights aₙ, so each frame is one weighted sum: cheap enough
+for real time. The work is done by `src/tdroommodes/runtime.py`, which imports only numpy, so
+TouchDesigner's own Python runs it with nothing to install.
+
+The data, for your own networks or shaders:
 
 - `grid.npz`: `shapes` (x × y × z × modes, zero outside the room), `inside`, the axes `x`,
-  `y`, `z`, `frequencies`, `decay`. A 3D texture per mode, or a slice of it.
-- `modes.npz`: `vertices`, `tetrahedra`, `vertex_shapes` (vertices × modes): a point cloud.
-- `src/acousticfem/synth.py`: free decay, sine source, impulse response, transfer function.
-  It imports only numpy: copy the file next to your TouchDesigner project and import it there.
-  (Importing the whole `acousticfem` package needs its other dependencies.)
-
-Notebook 2 shows a Script TOP that draws a slice of the field.
+  `y`, `z`, `frequencies`, `decay`.
+- `modes.npz`: `vertices`, `tetrahedra`, `vertex_shapes` (vertices × modes), on the mesh.
+- `src/tdroommodes/synth.py` (numpy only): free decay, sine source, impulse response,
+  transfer function.
 
 ## Method
 
@@ -155,7 +169,7 @@ Absorption coefficients come from octave-band tables: below 125 Hz, where most m
 
 ## Validation
 
-`uv run pytest` runs 30 tests, among them:
+`uv run pytest` runs 38 tests, among them:
 
 - frequencies of a rectangular room against the exact solution, error below 1% with linear
   and quadratic elements (0.45% for the 8 × 6 × 3.5 m room up to 150 Hz);
@@ -163,22 +177,27 @@ Absorption coefficients come from octave-band tables: below 125 Hz, where most m
 - decay of the oblique mode (1,1,1) against the Sabine formula;
 - air attenuation against the table of ISO 9613-1 (20 °C, 50%, 125 Hz–4 kHz);
 - volume and surfaces of an L-shaped room with both meshers;
-- the command line end to end.
+- the command line end to end;
+- the TouchDesigner side: fields against the formulas of `synth`, the field kept within
+  [-1, 1], the runtime importing nothing but numpy, and the Script operator callbacks run
+  against stand-ins for TouchDesigner's objects (not inside TouchDesigner itself).
 
 ## Structure
 
 ```
-src/acousticfem/
+src/tdroommodes/
     geometry.py     surfaces, volume meshes (gmsh, fTetWild), floor/walls/ceiling
     modes.py        eigenmodes, decay from absorption, evaluation at points
     physics.py      Sabine, Eyring, ISO 9613-1, Schroeder, critical distance
     materials.py    absorption of the surfaces; materials.yaml, 25 materials
     statistics.py   reverberation time per octave band
     synth.py        sound fields from the modes, numpy only
+    runtime.py      real-time fields for TouchDesigner, numpy only
     export.py       grid, ParaView, CSV
     plots.py        spectrum and mode gallery (Plotly)
     analysis.py     the whole pipeline
-    cli.py          the acousticfem command
+    cli.py          the tdroommodes command
+touchdesigner/      Script CHOP and TOP callbacks, setup guide
 notebooks/          examples
 tests/              validation
 data/               scans of Palazzo Datini

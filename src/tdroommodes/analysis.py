@@ -82,7 +82,7 @@ def analyze(geometry_, absorption=0.1, f_max: float | None = None, order: int = 
     Args:
         geometry_: path to a closed surface (STL, OBJ, PLY, ...), a trimesh.Trimesh, or the
             dimensions (length, width, height) [m] of a rectangular room
-        absorption: see `acousticfem.materials`; surfaces are floor, ceiling and walls, or
+        absorption: see `tdroommodes.materials`; surfaces are floor, ceiling and walls, or
             x0, x1, y0, y1, floor, ceiling for a rectangular room
         f_max: highest frequency [Hz]; by default the Schroeder frequency, above which
             single modes lose their meaning

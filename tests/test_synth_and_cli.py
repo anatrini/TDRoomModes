@@ -3,7 +3,7 @@ import json
 import numpy as np
 import pytest
 
-from acousticfem import cli, physics, synth
+from tdroommodes import cli, physics, synth
 
 
 def test_transfer_function_peaks_at_the_mode():

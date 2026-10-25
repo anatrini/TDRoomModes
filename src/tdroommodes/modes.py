@@ -98,7 +98,7 @@ class Modes:
         """Decay constant of every mode from the wall absorption and the air.
 
         Args:
-            absorption: see `acousticfem.materials`
+            absorption: see `tdroommodes.materials`
             temperature: [°C], for air absorption
             humidity: relative humidity [%], for air absorption
         """
@@ -138,7 +138,7 @@ class Modes:
         return values
 
     def to_dict(self, vertex_shapes: bool = True) -> dict:
-        """Arrays that describe the modes, for `save` and for `acousticfem.synth`."""
+        """Arrays that describe the modes, for `save` and for `tdroommodes.synth`."""
         data = {
             "frequencies": self.frequencies,
             "decay": self._decay(),
@@ -155,7 +155,7 @@ class Modes:
         return data
 
     def save(self, path):
-        """Save to a .npz file, readable with numpy alone (see `acousticfem.synth.load`)."""
+        """Save to a .npz file, readable with numpy alone (see `tdroommodes.synth.load`)."""
         np.savez_compressed(path, **self.to_dict())
 
     @classmethod
@@ -172,7 +172,7 @@ def compute(room: Room, f_max: float, c: float = 343.2, order: int = 2) -> Modes
     """All modes of `room` from 0 Hz up to `f_max` [Hz].
 
     The constant mode (0 Hz) is left out. The mesh must be fine enough for f_max:
-    see `acousticfem.geometry.element_size`.
+    see `tdroommodes.geometry.element_size`.
     """
     start = time.perf_counter()
     basis = Basis(room.mesh, ELEMENTS[order]())
@@ -214,8 +214,8 @@ def compute(room: Room, f_max: float, c: float = 343.2, order: int = 2) -> Modes
 
 def locate(mesh: MeshTet, points: np.ndarray, candidates: int = 12):
     """Tetrahedron containing each point (-1 outside) and the point's reference coordinates."""
-    if not hasattr(mesh, "_acousticfem_tree"):
-        mesh._acousticfem_tree = cKDTree(mesh.p[:, mesh.t].mean(axis=1).T)
+    if not hasattr(mesh, "_tdroommodes_tree"):
+        mesh._tdroommodes_tree = cKDTree(mesh.p[:, mesh.t].mean(axis=1).T)
     mapping = mesh._mapping()
     cells = np.full(len(points), -1)
     ref = np.zeros((3, len(points)))
@@ -223,7 +223,7 @@ def locate(mesh: MeshTet, points: np.ndarray, candidates: int = 12):
     for k in (candidates, 8 * candidates):
         if len(todo) == 0:
             break
-        _, near = mesh._acousticfem_tree.query(points[todo], k=min(k, mesh.t.shape[1]))
+        _, near = mesh._tdroommodes_tree.query(points[todo], k=min(k, mesh.t.shape[1]))
         near = np.atleast_2d(near.T).T
         for j in range(near.shape[1]):
             X = mapping.invF(points[todo].T[:, :, None], tind=near[:, j])[:, :, 0]

@@ -6,7 +6,7 @@ import itertools
 import numpy as np
 import pytest
 
-import acousticfem as af
+import tdroommodes as trm
 
 C = 343.2
 L, W, H = 5.0, 4.0, 3.0
@@ -21,8 +21,8 @@ def analytical(f_max):
 @pytest.mark.parametrize("order", [1, 2])
 def test_frequencies_within_one_percent(order):
     f_max = 120.0
-    room = af.box(L, W, H, af.element_size(f_max, C, order))
-    modes = af.compute(room, f_max, C, order)
+    room = trm.box(L, W, H, trm.element_size(f_max, C, order))
+    modes = trm.compute(room, f_max, C, order)
     exact = analytical(f_max)
     # The FEM overestimates frequencies slightly, so a mode just below f_max can fall above it
     assert len(exact) - 2 <= len(modes) <= len(exact)
@@ -32,8 +32,8 @@ def test_frequencies_within_one_percent(order):
 
 
 def test_shapes_are_normalized_and_evaluated_correctly():
-    room = af.box(L, W, H, 0.4)
-    modes = af.compute(room, 60.0, C)
+    room = trm.box(L, W, H, 0.4)
+    modes = trm.compute(room, 60.0, C)
     first = modes.frequencies[0]
     assert first == pytest.approx(C / (2 * L), rel=1e-3)  # axial mode (1, 0, 0)
     points = np.array([[0.5, 2.0, 1.5], [2.0, 1.0, 0.2], [4.9, 3.9, 2.9]])
@@ -45,7 +45,7 @@ def test_shapes_are_normalized_and_evaluated_correctly():
 
 
 def test_points_outside_are_nan():
-    modes = af.compute(af.box(L, W, H, 0.6), 50.0, C)
+    modes = trm.compute(trm.box(L, W, H, 0.6), 50.0, C)
     values = modes.evaluate([[-1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
     assert np.isnan(values[0]).all() and not np.isnan(values[1]).any()
 
@@ -54,8 +54,8 @@ def test_oblique_mode_decay_matches_sabine():
     """For uniform small absorption, a mode with all three indices non-zero has the decay of
     the Sabine formula: δ = c α S / (8 V)."""
     alpha = 0.02
-    modes = af.compute(af.box(L, W, H, 0.4), 110.0, C).set_absorption(alpha, humidity=0, temperature=20)
-    from acousticfem import physics
+    modes = trm.compute(trm.box(L, W, H, 0.4), 110.0, C).set_absorption(alpha, humidity=0, temperature=20)
+    from tdroommodes import physics
     air = C * physics.air_attenuation(modes.frequencies, 20, 0) / 2
     room = modes.room
     sabine = C * alpha * room.surface_area() / (8 * room.volume)
@@ -66,9 +66,9 @@ def test_oblique_mode_decay_matches_sabine():
 
 
 def test_save_and_load(tmp_path):
-    modes = af.compute(af.box(L, W, H, 0.8), 60.0, C).set_absorption(0.1)
+    modes = trm.compute(trm.box(L, W, H, 0.8), 60.0, C).set_absorption(0.1)
     modes.save(tmp_path / "modes.npz")
-    loaded = af.Modes.load(tmp_path / "modes.npz")
+    loaded = trm.Modes.load(tmp_path / "modes.npz")
     assert np.allclose(loaded.frequencies, modes.frequencies)
     p = [[1.0, 1.0, 1.0]]
     assert np.allclose(loaded.evaluate(p), modes.evaluate(p), atol=1e-6)

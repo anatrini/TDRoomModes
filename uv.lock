@@ -9,58 +9,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "acousticfem"
-version = "3.0.0"
-source = { editable = "." }
-dependencies = [
-    { name = "gmsh" },
-    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "plotly" },
-    { name = "pytetwild" },
-    { name = "pyvista" },
-    { name = "pyyaml" },
-    { name = "scikit-fem" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "trimesh" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-]
-notebooks = [
-    { name = "ipykernel" },
-    { name = "jupyterlab" },
-    { name = "nbformat" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "gmsh", specifier = ">=4.12" },
-    { name = "networkx", specifier = ">=3.6.1" },
-    { name = "numpy", specifier = ">=1.26" },
-    { name = "plotly", specifier = ">=5.20" },
-    { name = "pytetwild", specifier = ">=0.4.2" },
-    { name = "pyvista", specifier = ">=0.49.1" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "scikit-fem", specifier = ">=10.0" },
-    { name = "scipy", specifier = ">=1.12" },
-    { name = "trimesh", specifier = ">=4.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.0" }]
-notebooks = [
-    { name = "ipykernel", specifier = ">=6.29" },
-    { name = "jupyterlab", specifier = ">=4.0" },
-    { name = "nbformat", specifier = ">=5.9" },
-]
-
-[[package]]
 name = "anyio"
 version = "4.15.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2872,6 +2820,58 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/28/e3/55dcc2cfbc3ca9c29519eb6884dd1415ecb53b0e934862d3559ddcb7e20b/stack_data-0.6.3.tar.gz", hash = "sha256:836a778de4fec4dcd1dcd89ed8abff8a221f58308462e1c4aa2a3cf30148f0b9", size = 44707, upload-time = "2023-09-30T13:58:05.479Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/7b/ce1eafaf1a76852e2ec9b22edecf1daa58175c090266e9f6c64afcd81d91/stack_data-0.6.3-py3-none-any.whl", hash = "sha256:d5558e0c25a4cb0853cddad3d77da9891a08cb85dd9f9f91b9f8cd66e511e695", size = 24521, upload-time = "2023-09-30T13:58:03.53Z" },
+]
+
+[[package]]
+name = "tdroommodes"
+version = "1.0.0"
+source = { editable = "." }
+dependencies = [
+    { name = "gmsh" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "plotly" },
+    { name = "pytetwild" },
+    { name = "pyvista" },
+    { name = "pyyaml" },
+    { name = "scikit-fem" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "trimesh" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+notebooks = [
+    { name = "ipykernel" },
+    { name = "jupyterlab" },
+    { name = "nbformat" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "gmsh", specifier = ">=4.12" },
+    { name = "networkx", specifier = ">=3.6.1" },
+    { name = "numpy", specifier = ">=1.26" },
+    { name = "plotly", specifier = ">=5.20" },
+    { name = "pytetwild", specifier = ">=0.4.2" },
+    { name = "pyvista", specifier = ">=0.49.1" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "scikit-fem", specifier = ">=10.0" },
+    { name = "scipy", specifier = ">=1.12" },
+    { name = "trimesh", specifier = ">=4.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.0" }]
+notebooks = [
+    { name = "ipykernel", specifier = ">=6.29" },
+    { name = "jupyterlab", specifier = ">=4.0" },
+    { name = "nbformat", specifier = ">=5.9" },
 ]
 
 [[package]]

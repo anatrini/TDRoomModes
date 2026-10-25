@@ -32,7 +32,7 @@ def sample_grid(modes: Modes, spacing: float) -> dict:
 
 
 def grid(modes: Modes, path, spacing: float):
-    """Save `sample_grid` to a .npz file, loadable with numpy alone (`acousticfem.synth.load`)."""
+    """Save `sample_grid` to a .npz file, loadable with numpy alone (`tdroommodes.synth.load`)."""
     np.savez_compressed(path, **sample_grid(modes, spacing))
 
 

@@ -1,7 +1,7 @@
 """Statistical room acoustics: reverberation time, Schroeder frequency, critical distance.
 
 These quantities assume a diffuse sound field, which holds above the Schroeder frequency;
-below it the room behaves as a set of separate modes (`acousticfem.modes`).
+below it the room behaves as a set of separate modes (`tdroommodes.modes`).
 """
 
 import numpy as np
@@ -16,7 +16,7 @@ def room_statistics(volume: float, areas: dict, absorption, temperature: float =
     Args:
         volume: room volume [m³]
         areas: surface name -> area [m²], e.g. `Room.areas()` or `geometry.surface_areas`
-        absorption: see `acousticfem.materials`
+        absorption: see `tdroommodes.materials`
 
     The Schroeder frequency uses the Sabine reverberation time of the 125 Hz band, the band
     nearest to the modal range.

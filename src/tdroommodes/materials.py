@@ -21,7 +21,7 @@ OCTAVE_BANDS = np.array([125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0])
 
 @lru_cache(maxsize=1)
 def _database() -> dict:
-    return yaml.safe_load(files("acousticfem").joinpath("materials.yaml").read_text())
+    return yaml.safe_load(files("tdroommodes").joinpath("materials.yaml").read_text())
 
 
 def list_materials() -> dict:
@@ -34,7 +34,7 @@ def material(name: str) -> np.ndarray:
     try:
         return np.array(_database()["materials"][name]["absorption"], dtype=float)
     except KeyError:
-        raise ValueError(f"unknown material {name!r}; see acousticfem.materials.list_materials()") from None
+        raise ValueError(f"unknown material {name!r}; see tdroommodes.materials.list_materials()") from None
 
 
 def _bands(value) -> np.ndarray:
