@@ -165,15 +165,6 @@ Absorption coefficients come from octave-band tables: below 125 Hz, where most m
 - volume and surfaces of an L-shaped room with both meshers;
 - the command line end to end.
 
-## Performance
-
-On an Apple M-series laptop, total time of one run:
-
-| | AcousticFEM 2 (FEniCSx) | AcousticFEM 3 |
-|---|---|---|
-| 8 × 6 × 3.5 m room, 20–150 Hz | 80 s, 30 of 89 modes, error up to 9% | 5 s, 88 of 89 modes, error below 0.5% |
-| Datini scan, absorption 0.1, up to the Schroeder frequency (68 Hz) | the bounding box instead of the room | 47 s, 128 modes on the real geometry (20 s of it for the mesh) |
-
 ## Structure
 
 ```
