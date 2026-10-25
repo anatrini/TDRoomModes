@@ -118,14 +118,15 @@ def callbacks(name, seconds):
 
 def test_callbacks_end_to_end(grid_file):
     chop = ScriptOp(Repository=str(REPO), Grid=str(grid_file), Excitation="impulse", Sourcex=1.0,
-                    Sourcey=0.8, Sourcez=0.7, Frequency=50.0, Mode=0, Loop=0.0)
+                    Sourcey=0.8, Sourcez=0.7, Frequency=50.0, Mode=0, Loop=0.0, Speed=0.5)
     modes_chop = callbacks("modes_chop", seconds=10.0)
     modes_chop.onPulse(Par("Trigger", None, chop))  # the impulse starts at 10 s
-    modes_chop.absTime.seconds = 10.05
+    modes_chop.absTime.seconds = 10.1
     modes_chop.onCook(chop)
     room = runtime.load(grid_file)
     assert set(chop.channels) == {"frequency", "t60", "weight"}
     assert np.allclose(chop["frequency"].vals, room.frequencies)
+    # 0.1 s after the trigger at half speed
     assert np.allclose(chop["weight"].vals, room.weights("impulse", 0.05, [1.0, 0.8, 0.7]))
 
     top = ScriptOp(Repository=str(REPO), Grid=str(grid_file), Weights=chop, Axis="z", Position=0.5,

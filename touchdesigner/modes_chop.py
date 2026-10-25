@@ -30,6 +30,9 @@ def onSetupParameters(scriptOp):
     page.appendInt("Mode", label="Mode index")
     page.appendPulse("Trigger", label="Trigger impulse")
     page.appendFloat("Loop", label="Retrigger every [s] (0 = never)")
+    speed = page.appendFloat("Speed", label="Speed (1 = real time)")[0]
+    speed.default = 1.0
+    speed.normMax = 1.0
 
 
 def onPulse(par):
@@ -47,6 +50,8 @@ def onCook(scriptOp):
         t -= scriptOp.fetch("t0", 0.0)
         if par.Loop.eval() > 0:
             t %= par.Loop.eval()
+    # Modes oscillate at tens of hertz, faster than the frame rate: slow time down to watch them
+    t *= par.Speed.eval()
     source = [par.Sourcex.eval(), par.Sourcey.eval(), par.Sourcez.eval()]
     weights = room.weights(excitation, t, source, par.Frequency.eval(), par.Mode.eval())
 
