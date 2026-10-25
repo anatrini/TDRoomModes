@@ -41,17 +41,17 @@ def onSetupParameters(scriptOp):
     page.appendFile("Grid", label="grid.npz (empty: example room)")
     page.appendFolder("Repository", label="TDRoomModes folder (optional)")
     excitation = page.appendMenu("Excitation")[0]
-    excitation.menuNames = ["impulse", "sine", "mode"]
-    excitation.menuLabels = ["Impulse at the source", "Sine at the source", "Single mode"]
+    excitation.menuNames = ["mode", "impulse", "sine"]
+    excitation.menuLabels = ["Single mode", "Impulse at the source", "Sine at the source"]
     page.appendXYZ("Source", label="Source [m]")
     frequency = page.appendFloat("Frequency", label="Sine frequency [Hz]")[0]
     frequency.normMax = 200
-    frequency.default = 50
+    frequency.default = frequency.val = 50
     page.appendInt("Mode", label="Mode index")
     page.appendPulse("Trigger", label="Trigger impulse")
     page.appendFloat("Loop", label="Retrigger every [s] (0 = never)")
     speed = page.appendFloat("Speed", label="Speed (1 = real time)")[0]
-    speed.default = 1.0
+    speed.default = speed.val = 0.05
     speed.normMax = 1.0
 
 
@@ -66,7 +66,9 @@ def onCook(scriptOp):
     excitation = par.Excitation.eval()
     t = absTime.seconds
     if excitation == "impulse":
-        t -= scriptOp.fetch("t0", 0.0)
+        if scriptOp.fetch("t0", None) is None:  # never triggered: the first impulse is now
+            scriptOp.store("t0", t)
+        t -= scriptOp.fetch("t0", t)
         if par.Loop.eval() > 0:
             t %= par.Loop.eval()
     # Modes oscillate at tens of hertz, faster than the frame rate: slow time down to watch them

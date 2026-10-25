@@ -41,12 +41,12 @@ def onSetupParameters(scriptOp):
     axis = page.appendMenu("Axis", label="Plane normal")[0]
     axis.menuNames = axis.menuLabels = ["z", "y", "x"]
     position = page.appendFloat("Position", label="Plane position (0-1)")[0]
-    position.default = 0.5
+    position.default = position.val = 0.5
     colors = page.appendMenu("Colors")[0]
     colors.menuNames = ["signed", "raw"]
     colors.menuLabels = ["Red + / blue -", "Raw value in RGB"]
     gain = page.appendFloat("Gain")[0]
-    gain.default = 1.0
+    gain.default = gain.val = 1.0
 
 
 def modes_chop(scriptOp):

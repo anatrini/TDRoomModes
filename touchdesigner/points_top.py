@@ -39,7 +39,7 @@ def onSetupParameters(scriptOp):
     page.appendFile("Grid", label="grid.npz (empty: example room)")
     page.appendFolder("Repository", label="TDRoomModes folder (optional)")
     gain = page.appendFloat("Gain")[0]
-    gain.default = 1.0
+    gain.default = gain.val = 1.0
 
 
 def modes_chop(scriptOp):
