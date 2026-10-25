@@ -187,3 +187,10 @@ def test_tops_find_the_modes_chop_when_the_parameter_is_empty(grid_file):
     lonely = ScriptOp(siblings=[other], Repository=str(REPO), Grid=str(grid_file), Weights=None, Gain=1.0)
     with pytest.raises(RuntimeError, match="Modes CHOP"):
         callbacks("points_top", 0.0).onCook(lonely)
+
+
+def test_auto_scale_shows_the_field_after_the_room_has_faded(grid_file):
+    room = runtime.load(grid_file)
+    late = room.slice(room.weights("impulse", 1.5, [1.0, 0.8, 0.7]))
+    assert np.nanmax(np.abs(late)) < 0.05  # physically almost silent
+    assert np.nanmax(np.abs(runtime.auto_scale(late))) == pytest.approx(1.0)

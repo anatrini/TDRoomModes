@@ -163,12 +163,23 @@ def to_rgba(field: np.ndarray, colors: str = "signed", gain: float = 1.0) -> np.
     return rgba
 
 
-def points_image(room: RoomModes, weights, gain: float = 1.0) -> np.ndarray:
+def auto_scale(field: np.ndarray) -> np.ndarray:
+    """The field divided by its own peak, so every frame uses the full range [-1, 1].
+
+    The weights of `RoomModes.weights` keep the physical level: after an impulse the field fades
+    as the room does, and around a source it peaks next to the source. Auto scale shows the
+    shape of the field whatever its level."""
+    peak = np.nanmax(np.abs(field)) if np.any(~np.isnan(field)) else 0.0
+    return field / peak if peak > 0 else field
+
+
+def points_image(room: RoomModes, weights, gain: float = 1.0, auto: bool = False) -> np.ndarray:
     """Positions and field of the points in one RGBA float32 image, for instancing:
-    RGB = x, y, z [m], A = pressure. Spare pixels at the end repeat the first point with zero
-    pressure."""
+    RGB = x, y, z [m], A = pressure (see `auto_scale` for `auto`). Spare pixels at the end
+    repeat the first point with zero pressure."""
     points = room.points()
-    values = room.point_field(weights) * gain
+    values = room.point_field(weights)
+    values = (auto_scale(values) if auto else values) * gain
     n = len(points)
     width = int(np.ceil(np.sqrt(n)))
     height = int(np.ceil(n / width))

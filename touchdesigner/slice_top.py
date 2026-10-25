@@ -45,6 +45,9 @@ def onSetupParameters(scriptOp):
     colors = page.appendMenu("Colors")[0]
     colors.menuNames = ["signed", "raw"]
     colors.menuLabels = ["Red + / blue -", "Raw value in RGB"]
+    brightness = page.appendMenu("Brightness")[0]
+    brightness.menuNames = ["auto", "physical"]
+    brightness.menuLabels = ["Auto: every frame at full scale", "Physical: real level, shows the decay"]
     gain = page.appendFloat("Gain")[0]
     gain.default = gain.val = 1.0
 
@@ -69,4 +72,7 @@ def onCook(scriptOp):
     par = scriptOp.par
     weights = np.array(modes_chop(scriptOp)["weight"].vals)
     field = room.slice(weights, par.Axis.eval(), par.Position.eval())
+    brightness = getattr(par, "Brightness", None)  # absent in operators set up before it existed
+    if brightness is None or brightness.eval() == "auto":
+        field = rt.auto_scale(field)
     scriptOp.copyNumpyArray(rt.to_rgba(field, par.Colors.eval(), par.Gain.eval()))

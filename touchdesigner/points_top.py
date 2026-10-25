@@ -38,6 +38,9 @@ def onSetupParameters(scriptOp):
     page.appendCHOP("Weights", label="Modes CHOP")
     page.appendFile("Grid", label="grid.npz (empty: example room)")
     page.appendFolder("Repository", label="TDRoomModes folder (optional)")
+    brightness = page.appendMenu("Brightness")[0]
+    brightness.menuNames = ["auto", "physical"]
+    brightness.menuLabels = ["Auto: every frame at full scale", "Physical: real level, shows the decay"]
     gain = page.appendFloat("Gain")[0]
     gain.default = gain.val = 1.0
 
@@ -61,4 +64,6 @@ def onCook(scriptOp):
     rt, room = load(scriptOp)
     par = scriptOp.par
     weights = np.array(modes_chop(scriptOp)["weight"].vals)
-    scriptOp.copyNumpyArray(rt.points_image(room, weights, par.Gain.eval()))
+    brightness = getattr(par, "Brightness", None)  # absent in operators set up before it existed
+    auto = brightness is None or brightness.eval() == "auto"
+    scriptOp.copyNumpyArray(rt.points_image(room, weights, par.Gain.eval(), auto))
