@@ -5,3 +5,7 @@ __pycache__/
 .ipynb_checkpoints/
 results/
 .DS_Store
+# TouchDesigner: personal project files, backups and crash saves (the component is the .tox)
+*.toe
+Backup/
+CrashAutoSave*

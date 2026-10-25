@@ -14,9 +14,9 @@ It works in two steps:
 1. **Compute, once per room** (Python, `uv run tdroommodes room.stl --grid 0.25`): the finite
    element method finds every mode up to the Schroeder frequency on the real geometry, and the
    materials of floor, walls and ceiling give each mode its decay.
-2. **Play, in real time** (TouchDesigner, `touchdesigner/`): a Script CHOP sets the weight of
-   each mode for an impulse, a sine or a single mode at a source you can move; Script TOPs draw
-   the resulting field. Each frame is one weighted sum of precomputed shapes.
+2. **Play, in real time** (TouchDesigner, `touchdesigner/TDRoomModes.tox`): the component sets
+   the weight of each mode for an impulse, a sine or a single mode at a source you can move, and
+   draws the resulting field. Each frame is one weighted sum of precomputed shapes.
 
 The computation also gives reverberation times per octave band, the response between a source
 and a receiver, and the modal impulse response as a WAV file.
@@ -102,14 +102,19 @@ The steps are also available one by one: `trm.load_surface`, `trm.from_surface` 
 
 ## TouchDesigner
 
-[`touchdesigner/README.md`](touchdesigner/README.md) explains how to set up the three Script
-operators, step by step:
+Drag [`touchdesigner/TDRoomModes.tox`](touchdesigner/TDRoomModes.tox) into your network and
+choose the TDRoomModes folder on its **Room** page; with grid.npz empty it plays the example
+room in `examples/box/`, otherwise any `grid.npz` you have computed. Its pages:
 
-| Operator | Output |
+| Page | Parameters |
 |---|---|
-| Script CHOP, `modes_chop.py` | one sample per mode: `frequency`, `t60`, `weight`; excitation by impulse, sine or single mode, at a source you place |
-| Script TOP, `slice_top.py` | the field on a plane through the room |
-| Script TOP, `points_top.py` | the points inside the room, RGB = position, A = pressure, for instancing |
+| Room | TDRoomModes folder, grid.npz |
+| Excitation | Excitation (single mode, impulse at the source, sine at the source), Mode index, Source, Sine frequency, Trigger impulse, Retrigger every, Speed |
+| View | Plane normal, Plane position, Colors, Brightness, Gain |
+
+Outputs: a TOP with the field on a plane through the room, and a CHOP with one sample per mode
+(`frequency`, `t60`, `weight`). [`touchdesigner/README.md`](touchdesigner/README.md) explains
+every parameter, what is inside the component, and how to add a point cloud.
 
 Below the Schroeder frequency the pressure in the room is a sum of modes,
 
@@ -169,7 +174,7 @@ Absorption coefficients come from octave-band tables: below 125 Hz, where most m
 
 ## Validation
 
-`uv run pytest` runs 39 tests, among them:
+`uv run pytest` runs 42 tests, among them:
 
 - frequencies of a rectangular room against the exact solution, error below 1% with linear
   and quadratic elements (0.45% for the 8 × 6 × 3.5 m room up to 150 Hz);
@@ -197,7 +202,7 @@ src/tdroommodes/
     plots.py        spectrum and mode gallery (Plotly)
     analysis.py     the whole pipeline
     cli.py          the tdroommodes command
-touchdesigner/      Script CHOP and TOP callbacks, setup guide
+touchdesigner/      TDRoomModes.tox, its Script CHOP and TOP callbacks, guide
 notebooks/          examples
 tests/              validation
 examples/box/        modes of an 8 x 6 x 3.5 m room, ready for TouchDesigner
